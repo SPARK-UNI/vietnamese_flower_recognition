@@ -8,11 +8,9 @@ train_dir = "train"
 valid_dir = "valid"
 test_dir  = "test"
 
-# Tham số
-img_size = (64, 64)   # resize ảnh về 64x64
-batch_size = 64
+img_size = (64, 64)   
+batch_size = 32
 
-# Data augmentation cho train set
 train_datagen = ImageDataGenerator(
     rescale=1./255,
     rotation_range=20,
@@ -25,11 +23,10 @@ train_datagen = ImageDataGenerator(
 valid_datagen = ImageDataGenerator(rescale=1./255)
 test_datagen  = ImageDataGenerator(rescale=1./255)
 
-# Load ảnh grayscale
 train_gen = train_datagen.flow_from_directory(
     train_dir,
     target_size=img_size,
-    color_mode="grayscale",   # <---- chuyển ảnh về grayscale
+    color_mode="grayscale",  
     batch_size=batch_size,
     class_mode="categorical"
 )
@@ -51,16 +48,12 @@ test_gen = test_datagen.flow_from_directory(
     shuffle=False
 )
 
-# Số lớp
 num_classes = len(train_gen.class_indices)
 
-# Mô hình ANN
 model = models.Sequential([
-    layers.Flatten(input_shape=(img_size[0], img_size[1], 1)),  # 1 kênh cho grayscale
+    layers.Flatten(input_shape=(img_size[0], img_size[1], 1)),  
     layers.Dense(512, activation="relu"),
-    layers.Dropout(0.4),
     layers.Dense(256, activation="relu"),
-    layers.Dropout(0.3),
     layers.Dense(num_classes, activation="softmax")
 ])
 
@@ -70,11 +63,9 @@ model.compile(
     metrics=["accuracy"]
 )
 
-# Callback: dừng sớm và giảm learning rate
 early_stop = EarlyStopping(monitor="val_loss", patience=10, restore_best_weights=True)
 reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=5)
 
-# Train
 history = model.fit(
     train_gen,
     epochs=150,
@@ -82,9 +73,7 @@ history = model.fit(
     callbacks=[early_stop, reduce_lr]
 )
 
-# Đánh giá trên test set
 loss, acc = model.evaluate(test_gen)
 print(f"Test accuracy: {acc:.4f}")
 
-# Lưu model
-model.save("ann_model_gray.h5")
+model.save("ann_model.h5")

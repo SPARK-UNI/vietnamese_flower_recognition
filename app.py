@@ -6,10 +6,8 @@ import io
 
 app = Flask(__name__)
 
-# Load model
-model = tf.keras.models.load_model("ann_model0.h5")
+model = tf.keras.models.load_model("ann_model.h5")
 
-# Danh sách class (em thay đúng theo dataset của mình)
 class_names = ["hoa cuc", "hoa hong", "hoa lan", "hoa mat troi", "hoa sen" ]
 
 @app.route("/")

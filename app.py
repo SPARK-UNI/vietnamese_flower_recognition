@@ -1,43 +1,43 @@
 from flask import Flask, render_template, request, jsonify
-import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
 import numpy as np
-from PIL import Image
 import io
+from PIL import Image
 
 app = Flask(__name__)
 
-model = tf.keras.models.load_model("ann_model.h5")
+MODEL_PATH = r"your_model_path/flower_cnn.h5"
+model = load_model(MODEL_PATH)
 
-class_names = ["hoa cuc", "hoa hong", "hoa lan", "hoa mat troi", "hoa sen" ]
+class_names = ['Hoa Ly', 'Hoa Sen', 'Hoa Lan', 'Hoa Hướng Dương', 'Hoa Tulip']
 
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
 @app.route("/predict", methods=["POST"])
 def predict():
     if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"})
+        return jsonify({"error": "Không có file"}), 400
 
     file = request.files["file"]
-    if file.filename == "":
-        return jsonify({"error": "Empty file"})
 
-    # Xử lý ảnh
     img = Image.open(io.BytesIO(file.read())).convert("RGB")
-    img = img.resize((64, 64))  # resize theo input model
-    img_array = np.array(img) / 255.0
+    img = img.resize((224, 224))  
+
+    img_array = np.array(img) 
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Predict
     preds = model.predict(img_array)
-    pred_class = np.argmax(preds[0])
-    confidence = float(np.max(preds[0]))
+    class_idx = np.argmax(preds[0])
+    confidence = round(float(np.max(preds[0]) * 100), 2)
 
     return jsonify({
-        "class": class_names[pred_class],
-        "confidence": round(confidence * 100, 2)
+        "class": class_names[class_idx],
+        "confidence": confidence
     })
+
 
 if __name__ == "__main__":
     app.run(debug=True)
